@@ -1,0 +1,32 @@
+#%RAML 1.0
+title: order-salesforce-qurey-api-v1
+/account:
+  description: To retrieve accounts from salesforce
+  get:
+      description: Lists all accounts of a specific user
+      queryParameters:
+          userId:
+            type: string
+            description: use to query all accounts of a user
+
+      responses:
+        200:
+          body:
+            application/json:
+              type: array
+              description: to submit account details
+              example: !include /responseExample.json
+  post:
+    description: To send accounts to  salesforce
+    body:
+      application/json:
+        type: array
+        example: !include /responseExample.json
+    responses:
+      201: 
+        body:
+          application/json:
+            example:  {
+              "Status": "Successfuly Inserted"
+            }
+
