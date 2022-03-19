@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
-http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
     <http:listener-config name="accounts-api-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="8081" />
     </http:listener-config>
+    <salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="bfd4afc1-a524-43c1-a459-c77bfb8b84e4" >
+		<salesforce:basic-connection username="sri4yes@gmail.com" password="mule@2022" securityToken="b5zUjI7z4JrURcwyDmUYJiQL" url="https://login.salesforce.com/services/Soap/u/52.0" />
+	</salesforce:sfdc-config>
     <apikit:config name="accounts-api-config" api="accounts-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
 <api-gateway:autodiscovery apiId="17692628" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="b0bca2e6-07d8-43de-8a2f-eed68b52e381" flowRef="accounts-api-main" />
 	<flow name="accounts-api-main">
@@ -142,6 +146,22 @@ output application/json
 payload filter ($."Account Number" == vars.accountNumber)]]></ee:set-payload>
             </ee:message>
         </ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="3d15650d-b542-4925-9c12-6a3e2686a2f8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[
+    {
+        "Sno_c__c": payload."S.no",
+        "NaicsCode": payload."Rack no ",
+        "Sic": payload."Shelf No",
+        "AccountNumber": payload."Account Number"
+    }
+]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:upsert doc:name="Upsert" doc:id="c3852439-4e2b-48eb-846b-1b53a5de50a6" config-ref="Salesforce_Config" objectType="Account" externalIdFieldName="Sno_c__c"/>
 		<logger level="INFO" message="#[payload]" />
     </flow>
     <flow name="post:\account:application\json:accounts-api-config">
