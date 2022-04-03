@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
-	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+<mule xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
 http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
-http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
     <http:listener-config name="accounts-api-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="8081" />
     </http:listener-config>
@@ -12,7 +13,9 @@ http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mu
 		<salesforce:basic-connection username="sri4yes@gmail.com" password="mule@2022" securityToken="b5zUjI7z4JrURcwyDmUYJiQL" url="https://login.salesforce.com/services/Soap/u/52.0" />
 	</salesforce:sfdc-config>
     <apikit:config name="accounts-api-config" api="accounts-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
-<api-gateway:autodiscovery apiId="17692628" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="b0bca2e6-07d8-43de-8a2f-eed68b52e381" flowRef="accounts-api-main" />
+<!-- <api-gateway:autodiscovery apiId="17692628" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="b0bca2e6-07d8-43de-8a2f-eed68b52e381" flowRef="accounts-api-main" /> -->
+	<json-logger:config name="JSON_Logger_Config" doc:name="JSON Logger Config" doc:id="3652d9a8-eafd-43b2-bb05-8fe22f0f40cc" environment="${json.logger.application.env}" />
+	<configuration-properties doc:name="Configuration properties" doc:id="17c5bc8d-f1f6-4d46-88ec-c4f85d95ed15" file="config\logger\Json-logger-dev-config.yaml" />
 	<flow name="accounts-api-main">
         <http:listener config-ref="accounts-api-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
@@ -156,13 +159,23 @@ output application/java
         "Sno_c__c": payload."S.no",
         "NaicsCode": payload."Rack no ",
         "Sic": payload."Shelf No",
-        "AccountNumber": payload."Account Number"
+        "AccountNumber": payload."Account Number",
+        "Name": payload."Name"
     }
 ]]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 		<salesforce:upsert doc:name="Upsert" doc:id="c3852439-4e2b-48eb-846b-1b53a5de50a6" config-ref="Salesforce_Config" objectType="Account" externalIdFieldName="Sno_c__c"/>
-		<logger level="INFO" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="80fd8f79-4372-4e3a-875e-1fb67c6cde95" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger doc:name="Logger" doc:id="7de2324e-6f3a-4f4b-86af-72961393b005" config-ref="JSON_Logger_Config" message="Data upserted sucessfuly "/>
+		<logger level="INFO" message="Data upserted sucessfuly " />
     </flow>
     <flow name="post:\account:application\json:accounts-api-config">
      <logger level="INFO" message="post:\account:application\json:accounts-api-config"/>

@@ -40,7 +40,7 @@
 			<version>1.5.25</version>
 			<classifier>mule-plugin</classifier>
 		</dependency>
-		<dependency>
+				<dependency>
 			<groupId>org.mule.connectors</groupId>
 			<artifactId>mule-sockets-connector</artifactId>
 			<version>1.2.2</version>
@@ -62,6 +62,24 @@
 			<groupId>com.mulesoft.connectors</groupId>
 			<artifactId>mule-salesforce-connector</artifactId>
 			<version>10.12.4</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		<dependency>
+			<groupId>com.mulesoft.connectors</groupId>
+			<artifactId>mule-amqp-connector</artifactId>
+			<version>1.6.0</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		<dependency>
+			<groupId>cc568b69-a181-4d4c-b044-90054c52897b</groupId>
+			<artifactId>json-logger</artifactId>
+			<version>2.0.1</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.mule.connectors</groupId>
+			<artifactId>mule-jms-connector</artifactId>
+			<version>1.6.3</version>
 			<classifier>mule-plugin</classifier>
 		</dependency>
 	</dependencies>
